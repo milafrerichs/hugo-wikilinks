@@ -1,0 +1,30 @@
+{ $firstBracket := "\\[\\[" }}
+{{ $lastBracket := "\\]\\]" }}
+
+{{ $wikiregex := "\\[\\[([^/]+?)\\]\\]" }}
+{{ $page := .Page }}
+
+{{ $wikilinks := .Content | findRE $wikiregex }}
+
+{{ $.Scratch.Add "content" .RawContent }}
+
+{{ range $wikilinks }}
+
+	{{ $content := . | replaceRE $wikiregex "$1" }}
+	{{ $content := $content | replaceRE "\\?" "\\?" }}
+
+	{{ $wikilink :=  printf "%s%s%s" $firstBracket $content $lastBracket }}
+	
+	{{ $anchorized := $content | anchorize }}
+
+	{{ $rel := relref $page $anchorized }}
+
+  {{ $link := printf "%s%s%s%s%s" "<a href=\"" $rel "\">" $content "</a>"  }}
+
+	
+	{{ $noteContent := $.Scratch.Get "content" | replaceRE $wikilink $link }}
+	{{ $.Scratch.Set "content" $noteContent }}
+{{ end }}
+
+{{ $content := .Scratch.Get "content" }}
+{{ $content | markdownify }}
