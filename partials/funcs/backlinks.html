@@ -1,0 +1,19 @@
+<!-- 
+Search for [[wikilink]] instead of "wikilink" when finding backlinks to prevent false positives: Otherwise, for a note whose filename/title is "now", every note containing the word "now" would be appended as a backlink)
+Regex not working for notes with colons on filename because hugo .File.BaseFileName returns a string with colons removed.
+-->  
+
+{{ $firstBracket := "\\[\\[" }}
+{{ $lastBracket := "\\]\\]" }}
+{{ $filename := .File.BaseFileName }}
+{{ $wikilink :=  printf "%s%s%s" $firstBracket $filename $lastBracket }}
+
+{{- $.Scratch.Add "backlinks" slice -}}
+{{- range .Site.RegularPages -}}
+	{{ if (findRE $wikilink .Content) }}
+		{{ $.Scratch.Add "backlinks" (dict .Permalink .Title) }}
+	{{ end }}
+{{- end -}}
+
+{{- $backlinks := $.Scratch.Get "backlinks" -}}
+{{ return $backlinks }}
